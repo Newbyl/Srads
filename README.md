@@ -5,6 +5,8 @@ I created this project to apply what I learned of deep learning and also to know
 
 ## TODO
 
-- add softmax
+- add softmax and more activation functions
 - add conv
+- add regularization
+- add optimizers 
 - refactoring 
