@@ -1,8 +1,16 @@
 import numpy as np
 import functions as fun
 
-class Dense():
+
+class Layer:
     def __init__(self, nb_n : int, activation : str) -> None:
+        self.nb_n = nb_n
+        self.activation = activation
+
+
+class Dense(Layer):
+    def __init__(self, nb_n : int, activation : str) -> None:
+        super.__init__()
         self.nb_n = nb_n
         self.activation = activation
 
