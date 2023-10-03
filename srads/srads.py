@@ -2,38 +2,49 @@ import numpy as np
 import functions as fun
 
 
+class Initialiser():
+    def __init__(self) -> None:
+        pass
+
+    def he_initialiser(self, input_size : int, nb_n : int) -> np.ndarray:
+        return np.random.randn(nb_n, input_size) * np.sqrt(2 / input_size)
+    
+    def normal_initialiser(self, input_size : int, nb_n : int) -> np.ndarray:
+        return np.random.randn(nb_n, input_size)
+    
+    def xavier_initialiser(self, input_size : int, nb_n : int) -> np.ndarray:
+        return np.random.randn(nb_n, input_size) * np.sqrt(1/input_size)
+
+    
 class Layer:
-    def __init__(self, nb_n : int, activation : str) -> None:
+    def __init__(self, input_shape : int, nb_n : int, activation : str) -> None:
         self.nb_n = nb_n
         self.activation = activation
+        self.input_shape = input_shape
+
 
 
 class Dense(Layer):
-    def __init__(self, nb_n : int, activation : str) -> None:
+    def __init__(self, nb_n : int, activation : str, input_shape : int, weights : np.ndarray = None, bias : np.ndarray = None) -> None:
         super.__init__()
         self.nb_n = nb_n
         self.activation = activation
+        self.input_shape = input_shape
+        self.weights = weights
+        self.bias = bias
+
+        if (self.weights == None):
+            self.weights = Initialiser.he_initialiser()
+        if (self.bias == None):
+            self.bias = np.random.randn(1, nb_n) * 0.01
+            
+
 
 
 class Forward():
-    def __init__(self, array_L : np.ndarray, input_size : int) -> None:
+    def __init__(self, array_L : np.ndarray) -> None:
         self.array_L = array_L
-        self.input_size = input_size
 
-    def weights_init(self) -> dict:
-        param = {}
-
-        param['W1'] = np.random.randn(self.array_L[0].nb_n, self.input_size) / np.sqrt(self.input_size)
-        param['b1'] = np.zeros((self.array_L[0].nb_n, 1))
-
-        for l in range(1, len(self.array_L)):
-            param['W' + str(l+1)] = np.random.randn(self.array_L[l].nb_n, self.array_L[l-1].nb_n) / np.sqrt(self.array_L[l-1])
-            param['b' + str(l+1)] = np.zeros((self.array_L[l].nb_n, 1))
-
-            assert(param['W' + str(l)].shape == (self.array_L[l], self.array_L[l-1]))
-            assert(param['b' + str(l)].shape == (self.array_L[l], 1))
-
-        return param
 
     def linear_forward(self, Activations : np.ndarray, Weights : np.ndarray, bias) -> tuple:
         Z = Weights.dot(Activations) + bias
