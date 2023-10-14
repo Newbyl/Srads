@@ -1,5 +1,5 @@
 import numpy as np
-import functions as fun
+from functions import *
 
 
 class Initialiser():
@@ -32,87 +32,35 @@ class Dense(Layer):
         self.input_shape = input_shape
         self.weights = weights
         self.bias = bias
+        self.z_out = None
 
         if (self.weights == None):
             self.weights = Initialiser.he_initialiser()
         if (self.bias == None):
             self.bias = np.random.randn(1, nb_n) * 0.01
             
-
-
-
-class Forward():
-    def __init__(self, array_L : np.ndarray) -> None:
-        self.array_L = array_L
-
-
-    def linear_forward(self, Activations : np.ndarray, Weights : np.ndarray, bias) -> tuple:
-        Z = Weights.dot(Activations) + bias
-
-        cache = (Activations, Weights, bias)
-
-        return Z, cache
     
-    def linear_activation_forward_relu(self, A_prev : np.ndarray, Weights : np.ndarray, bias : np.ndarray) -> tuple:
-        Z, linearCache = self.linear_forward(A_prev, Weights, bias)
-        A, activationCache = fun.relu(Z)
-
-        cache = (linearCache, activationCache)
-
-        return A, cache
-
-    def linear_activation_forward_sigmoid(self, A_prev : np.ndarray, Weights : np.ndarray, bias : np.ndarray) -> tuple:
-        Z, linearCache = self.linear_forward(A_prev, Weights, bias)
-        A, activationCache = fun.sigmoid(Z)
-
-        cache = (linearCache, activationCache)
-
-        return A, cache
-    
-    def forward_propagation(self, X, param):
-        caches = []
-        A = X
-        # We devide by 2 here because there are weights and biases
-        # in the same dict param
-        L = len(self.array_L) // 2
-
-        A_prev = A
-
-        # First layer
-        if self.array_L.activation[0] == "relu":
-            A, cache = self.linear_activation_forward_relu(A_prev, param['W1'], param['b1'])
-            caches.append(cache)
-
-        if self.array_L.activation[0] == "sigmoid":
-            A, cache = self.linear_activation_forward_sigmoid(A_prev, param['W1'], param['b1'])
-            caches.append(cache)
-
-        for l in range(1, L-1):
-            A_prev = A
+    def forward(self, input):
+        linear_forward = np.dot(input, self.weights) + self.bias
+        self.z_out = linear_forward
+        
+        if self.activation == "relu":
+            return relu(linear_forward)
+        if self.activation == "sigmoid":
+            return sigmoid(linear_forward)
+        if self.activation == "softmax":
+            return softmax(linear_forward)
+        
+    def backward(self, input):
+        ...
+        
             
-            if self.array_L.activation == "relu":
-                A, cache = self.linear_activation_forward_relu(A_prev, param['W' + str(l+1)], param['b' + str(l+1)])
-                caches.append(cache)
-
-            if self.array_L.activation == "sigmoid":
-                A, cache = self.linear_activation_forward_sigmoid(A_prev, param['W' + str(l+1)], param['b' + str(l+1)])
-                caches.append(cache)
-
-        # Last layer
-        if self.array_L[L].activation == "relu":
-            A_last, cache = self.linear_activation_forward_relu(A, param['W' + str(L)], param['b' + str(L)])
-            caches.append(cache)
-
-        if self.array_L[L].activation == "sigmoid":
-            A_last, cache = self.linear_activation_forward_sigmoid(A_prev, param['W' + str(L)], param['b' + str(L)])
-            caches.append(cache)
-
-        assert(A_last.shape == (1,X.shape[0]))
-
-        return A_last, caches
 
 
-class Model():
+
+
+
+class Model:
     ...
         
 
