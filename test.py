@@ -8,10 +8,10 @@ c = Variable(np.array([2]))
 y = a * b + c
 
 # Compute the gradients of the output variable with respect to the inputs
-gradients = y.get_gradients()
+gradients = get_gradients(y)
 
 # Print the gradients
-print(y.value)
+print(y.array)
 print('grad_a:', gradients[a])
 print('grad_b:', gradients[b])
 print('grad_c:', gradients[c])
