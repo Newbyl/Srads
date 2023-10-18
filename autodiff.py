@@ -1,6 +1,6 @@
 import numpy as np
 from collections import defaultdict
-from typing import Callable
+from typing import Callable, Tuple, Dict, List
 
 """
 
@@ -14,10 +14,11 @@ class Variable:
     def __init__(
         self,
         array: np.ndarray,
-        local_gradients: list[tuple['Variable', Callable]] | None = None,
+        local_gradients: List[Tuple['Variable', Callable]] = None,
     ) -> None:
         self.array = array
         self.local_gradients = local_gradients if local_gradients else []
+
         
         Variable.__add__ = add
         Variable.__mul__ = mul
@@ -26,7 +27,7 @@ class Variable:
         Variable.__truediv__ = div
 
 
-def get_gradients(variable: Variable) -> dict[Variable, np.ndarray]:
+def get_gradients(variable: Variable) -> Dict[str, np.ndarray]:
     gradients = defaultdict(lambda: 0)
 
     def compute_gradients(variable, path_value):
@@ -40,9 +41,10 @@ def get_gradients(variable: Variable) -> dict[Variable, np.ndarray]:
     return dict(gradients)
 
 
+
 def enable_broadcast(
     a: Variable, b: Variable, matmul=False
-) -> tuple[Variable, Variable]:
+) -> Tuple[Variable, Variable]:
     "Enables gradients to be calculated when broadcasting."
     a_shape = a.array.shape[:-2] if matmul else a.array.shape
     b_shape = b.array.shape[:-2] if matmul else b.array.shape
@@ -76,8 +78,8 @@ def getitem(a: Variable, indices: np.ndarray) -> Variable:
 
 
 def broadcastinfo(
-    a_shape: tuple[int, ...], b_shape: tuple[int, ...]
-) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    a_shape: Tuple[int, ...], b_shape: Tuple[int, ...]
+) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     "Get which dimensions are added or repeated when `a` and `b` are broadcast."
     ndim = max(len(a_shape), len(b_shape))
 
@@ -139,7 +141,7 @@ def log(a: Variable) -> Variable:
     return Variable(value, local_gradients)
 
 
-def reshape(a: Variable, shape: tuple[int, ...]) -> Variable:
+def reshape(a: Variable, shape: 'tuple[int, ...]') -> Variable:
     "Reshape `a` into shape `shape`."
     value = np.reshape(a.array, shape)
     local_gradients = [(a, lambda path_value: path_value.reshape(a.array.shape))]
@@ -203,7 +205,7 @@ def sub(a: Variable, b: Variable) -> Variable:
     return Variable(value, local_gradients)
 
 
-def sum(a: Variable, axis: tuple[int, ...] | None = None) -> Variable:
+def sum(a: Variable, axis: Tuple[int, ...] = None) -> Variable:
     "Sum elements of `a`, along axes specified in `axis`."
     value = np.sum(a.array, axis)
 
@@ -214,6 +216,21 @@ def sum(a: Variable, axis: tuple[int, ...] | None = None) -> Variable:
         return result + path_value
 
     local_gradients = [(a, multiply_by_locgrad)]
+    return Variable(value, local_gradients)
+
+
+def leaky_relu(a: Variable, alpha: float = 0.02) -> Variable:
+    "Elementwise leaky relu."
+    multiplier = np.where(a.array > 0, np.array(1, a.dtype), np.array(alpha, a.dtype))
+    value = a.array * multiplier
+    local_gradients = [(a, lambda path_value: path_value * multiplier)]
+    return Variable(value, local_gradients)
+
+
+def relu(a: Variable) -> Variable:
+    "Elementwise ReLU."
+    value = np.maximum(a.array, 0)
+    local_gradients = [(a, lambda path_value: path_value * (a.array > 0))]
     return Variable(value, local_gradients)
 
 
@@ -229,4 +246,7 @@ def cross_entropy(y_pred: Variable, y_true: np.array, axis: int = -1) -> Variabl
     "Cross entropy loss."
     indices = (np.arange(len(y_true)), y_true)
     return neg(sum(log(getitem(y_pred, indices))))
+
+
+
 
